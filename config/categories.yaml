@@ -1,0 +1,238 @@
+# =============================================================================
+# US Local Business Lead Generation — Category Library
+# =============================================================================
+# Each industry group contains categories.
+# Each category has:
+#   - display_name: Human-readable name for reports
+#   - search_terms: List of natural-language queries used on Google Maps
+#
+# The scraper will search each term + location combination.
+# Example: "dental clinic in Houston, Texas"
+# =============================================================================
+
+health:
+  dental_clinic:
+    display_name: "Dental Clinics"
+    search_terms:
+      - "dental clinic"
+      - "dentist"
+      - "family dentist"
+
+  chiropractor:
+    display_name: "Chiropractors"
+    search_terms:
+      - "chiropractor"
+      - "chiropractic clinic"
+
+  physical_therapy:
+    display_name: "Physical Therapy"
+    search_terms:
+      - "physical therapy clinic"
+      - "physical therapist"
+
+  medical_clinic:
+    display_name: "Medical Clinics"
+    search_terms:
+      - "medical clinic"
+      - "urgent care"
+
+  dermatologist:
+    display_name: "Dermatologists"
+    search_terms:
+      - "dermatologist"
+      - "skin clinic"
+
+  optometrist:
+    display_name: "Optometrists"
+    search_terms:
+      - "optometrist"
+      - "eye doctor"
+
+  med_spa:
+    display_name: "Med Spas"
+    search_terms:
+      - "med spa"
+      - "medical spa"
+
+home_services:
+  roofing_contractor:
+    display_name: "Roofing Contractors"
+    search_terms:
+      - "roofing contractor"
+      - "roof repair"
+
+  hvac_contractor:
+    display_name: "HVAC Contractors"
+    search_terms:
+      - "hvac contractor"
+      - "ac repair"
+
+  plumber:
+    display_name: "Plumbers"
+    search_terms:
+      - "plumber"
+      - "plumbing service"
+
+  electrician:
+    display_name: "Electricians"
+    search_terms:
+      - "electrician"
+      - "electrical contractor"
+
+  landscaping_service:
+    display_name: "Landscaping Services"
+    search_terms:
+      - "landscaping service"
+      - "lawn care"
+
+  pest_control:
+    display_name: "Pest Control"
+    search_terms:
+      - "pest control"
+      - "exterminator"
+
+  cleaning_service:
+    display_name: "Cleaning Services"
+    search_terms:
+      - "cleaning service"
+      - "house cleaning"
+
+professional_services:
+  law_firm:
+    display_name: "Law Firms"
+    search_terms:
+      - "law firm"
+      - "attorney"
+      - "lawyer"
+
+  accounting_firm:
+    display_name: "Accounting Firms"
+    search_terms:
+      - "accounting firm"
+      - "cpa"
+      - "tax preparation"
+
+  insurance_agency:
+    display_name: "Insurance Agencies"
+    search_terms:
+      - "insurance agency"
+      - "insurance agent"
+
+  real_estate_agency:
+    display_name: "Real Estate Agencies"
+    search_terms:
+      - "real estate agency"
+      - "realtor"
+
+  mortgage_broker:
+    display_name: "Mortgage Brokers"
+    search_terms:
+      - "mortgage broker"
+      - "mortgage lender"
+
+automotive:
+  auto_repair:
+    display_name: "Auto Repair Shops"
+    search_terms:
+      - "auto repair"
+      - "car mechanic"
+
+  car_dealer:
+    display_name: "Car Dealerships"
+    search_terms:
+      - "car dealership"
+      - "used car dealer"
+
+  auto_detailing:
+    display_name: "Auto Detailing"
+    search_terms:
+      - "auto detailing"
+      - "car detailing"
+
+  tire_shop:
+    display_name: "Tire Shops"
+    search_terms:
+      - "tire shop"
+      - "tire dealer"
+
+  car_wash:
+    display_name: "Car Washes"
+    search_terms:
+      - "car wash"
+
+beauty:
+  hair_salon:
+    display_name: "Hair Salons"
+    search_terms:
+      - "hair salon"
+      - "hairdresser"
+
+  beauty_salon:
+    display_name: "Beauty Salons"
+    search_terms:
+      - "beauty salon"
+
+  spa:
+    display_name: "Spas"
+    search_terms:
+      - "spa"
+      - "day spa"
+
+  nail_salon:
+    display_name: "Nail Salons"
+    search_terms:
+      - "nail salon"
+
+  barber_shop:
+    display_name: "Barber Shops"
+    search_terms:
+      - "barber shop"
+      - "barber"
+
+fitness:
+  gym:
+    display_name: "Gyms"
+    search_terms:
+      - "gym"
+      - "fitness center"
+
+  yoga_studio:
+    display_name: "Yoga Studios"
+    search_terms:
+      - "yoga studio"
+      - "yoga class"
+
+  personal_trainer:
+    display_name: "Personal Trainers"
+    search_terms:
+      - "personal trainer"
+      - "fitness trainer"
+
+  martial_arts_school:
+    display_name: "Martial Arts Schools"
+    search_terms:
+      - "martial arts school"
+      - "karate school"
+
+hospitality:
+  restaurant:
+    display_name: "Restaurants"
+    search_terms:
+      - "restaurant"
+
+  hotel:
+    display_name: "Hotels"
+    search_terms:
+      - "hotel"
+
+  catering_service:
+    display_name: "Catering Services"
+    search_terms:
+      - "catering service"
+      - "caterer"
+
+  event_venue:
+    display_name: "Event Venues"
+    search_terms:
+      - "event venue"
+      - "banquet hall"

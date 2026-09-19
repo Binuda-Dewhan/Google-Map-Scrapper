@@ -1,0 +1,41 @@
+# =============================================================================
+# Scraper Settings
+# =============================================================================
+
+scraper:
+  # Maximum number of business results to collect per search term
+  max_results_per_search: 5
+
+  # Browser configuration
+  browser:
+    headless: false
+    viewport_width: 1280
+    viewport_height: 900
+
+  # Timeouts (in milliseconds)
+  timeouts:
+    page_load: 30000
+    element_wait: 10000
+    detail_render: 3000
+
+  # Human-like delay ranges (in seconds) — randomized between min and max
+  delays:
+    between_scroll: [1.5, 3.0]
+    between_business_click: [2.0, 4.0]
+    after_page_load: [1.0, 2.0]
+
+  # Retry configuration
+  retry:
+    max_retries: 2
+    retry_delay: [3.0, 5.0]
+
+# Output configuration
+output:
+  raw_dir: "data/raw"
+  cleaned_dir: "data/cleaned"
+  final_dir: "data/final"
+  log_dir: "logs"
+  formats:
+    - csv
+    - excel
+    - json
