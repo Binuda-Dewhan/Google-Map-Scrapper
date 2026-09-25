@@ -276,10 +276,10 @@ class GoogleMapsScraper:
                     f.flush()
                     self.seen_urls.add(biz_url)
                     self.stats["scraped"] += 1
-                    logger.info(f"  ✓ {lead.business_name} — {lead.extraction_status}")
+                    logger.info(f"  [OK] {lead.business_name} - {lead.extraction_status}")
                 else:
                     self.stats["failed"] += 1
-                    logger.warning(f"  ✗ Failed to extract: {biz_url[:80]}...")
+                    logger.warning(f"  [FAIL] Failed to extract: {biz_url[:80]}...")
 
                 # Human-like delay between businesses
                 await human_delay(self.settings.delays.between_business_click)
@@ -356,18 +356,49 @@ class GoogleMapsScraper:
 
         for attempt in range(1, self.settings.retry.max_retries + 1):
             try:
-                await page.goto(biz_url, wait_until="domcontentloaded",
-                                timeout=self.settings.timeouts.page_load)
-                await asyncio.sleep(self.settings.timeouts.detail_render / 1000)
+                is_soft_click = False
+                
+                # Attempt soft click if the element is currently in the DOM
+                # The href might have query params appended, so we use exact match
+                # Playwright click() auto-scrolls the element into view.
+                link = page.locator(f"a[href='{biz_url}']").first
+                
+                if await link.count() > 0:
+                    try:
+                        await link.click(timeout=5000)
+                        # Wait for the H1 title to appear to confirm the pane loaded
+                        await page.wait_for_selector("h1", timeout=self.settings.timeouts.element_wait)
+                        await asyncio.sleep(self.settings.timeouts.detail_render / 1000)
+                        is_soft_click = True
+                    except Exception as e:
+                        logger.debug(f"Soft click failed, falling back to hard navigation: {e}")
+                        is_soft_click = False
+
+                if not is_soft_click:
+                    # Fallback to hard navigation
+                    await page.goto(biz_url, wait_until="domcontentloaded",
+                                    timeout=self.settings.timeouts.page_load)
+                    await asyncio.sleep(self.settings.timeouts.detail_render / 1000)
 
                 lead = await self._parse_detail_pane(page, biz_url, task, errors)
+                
+                # If we used soft click, we must click the "Back" button to restore the feed list
+                if is_soft_click:
+                    try:
+                        back_btn = page.locator("button[aria-label='Back']").first
+                        if await back_btn.count() > 0:
+                            await back_btn.click(timeout=3000)
+                            await asyncio.sleep(1)
+                    except Exception as e:
+                        logger.debug(f"Failed to click back button: {e}")
+
                 return lead
 
             except Exception as e:
                 err_msg = f"Attempt {attempt} failed: {str(e)}"
                 errors.append(err_msg)
                 logger.warning(f"  {err_msg}")
-
+                
                 if attempt < self.settings.retry.max_retries:
                     await human_delay(self.settings.retry.retry_delay)
 
@@ -390,7 +421,14 @@ class GoogleMapsScraper:
         Parse all available fields from the Maps business detail pane.
         Uses stable selectors (aria-label, data-item-id).
         """
-        name = await self._safe_text(page, "h1")
+        # Target the h1 specifically inside the detail pane (role='main')
+        name = None
+        h1s = await page.locator("div[role='main'] h1").all()
+        for h1 in h1s:
+            text = await h1.inner_text()
+            if text and text.strip() != "Results" and "Sponsored" not in text:
+                name = text.strip()
+                break
 
         # ── Category ────────────────────────────────────────────────────
         category = None

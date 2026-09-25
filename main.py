@@ -122,6 +122,39 @@ def run_processing(raw_file: str, location: str, industry: str):
     logger.info(f"=== Pipeline complete - {len(validated_leads)} leads exported ===")
 
 
+async def run_enrichment(raw_file: str, location: str, industry: str) -> str:
+    """Run the Website Scraper (Part 2) on a raw file and return the enriched file path."""
+    import json
+    from app.core.models import BusinessLead
+    from app.core.config import load_settings
+    from app.scrapers.website_scraper import WebsiteScraper
+
+    settings = load_settings()
+    
+    # Load raw leads
+    leads = []
+    with open(raw_file, 'r', encoding='utf-8') as f:
+        for line in f:
+            if line.strip():
+                leads.append(BusinessLead.model_validate_json(line))
+                
+    if not leads:
+        logger.info("No leads found to enrich.")
+        return raw_file
+        
+    logger.info(f"=== Website Enrichment (Part 2) ===")
+    scraper = WebsiteScraper(settings)
+    enriched_leads = await scraper.enrich_leads(leads)
+    
+    enriched_file = raw_file.replace('_raw.jsonl', '_enriched.jsonl')
+    with open(enriched_file, 'w', encoding='utf-8') as f:
+        for lead in enriched_leads:
+            f.write(lead.model_dump_json() + "\n")
+            
+    logger.info(f"Enriched data saved to: {enriched_file}")
+    return enriched_file
+
+
 async def main():
     parser = argparse.ArgumentParser(
         description="US Local Business Lead Generation - Google Maps Scraper (Part 1)",
@@ -141,7 +174,7 @@ Examples:
     )
     parser.add_argument(
         "--industry", type=str, required=True,
-        help="Industry key from categories.yaml (e.g., 'health', 'automotive')"
+        help="Industry key from categories.yaml (e.g., 'health', 'automotive', or 'all')"
     )
     parser.add_argument(
         "--category", type=str, default=None,
@@ -159,21 +192,50 @@ Examples:
         "--process-only", type=str, default=None, metavar="RAW_FILE",
         help="Skip scraping - only run processing on an existing raw JSONL file"
     )
+    parser.add_argument(
+        "--enrich", action="store_true",
+        help="Run Website Scraper (Part 2) to extract emails/socials from websites"
+    )
 
     args = parser.parse_args()
 
     if args.process_only:
         # Just process an existing file
-        run_processing(args.process_only, args.location, args.industry)
+        current_file = args.process_only
+        if args.enrich:
+            current_file = await run_enrichment(current_file, args.location, args.industry)
+        run_processing(current_file, args.location, args.industry)
+        return
+
+    from app.core.config import load_categories
+    categories = load_categories()
+
+    if args.industry.lower() == "all":
+        industries_to_run = list(categories.keys())
     else:
+        industries_to_run = [i.strip() for i in args.industry.split(",")]
+
+    for ind in industries_to_run:
+        if ind not in categories:
+            logger.error(f"Industry '{ind}' not found in categories.yaml. Skipping.")
+            continue
+            
+        args.industry = ind
+        logger.info(f"\\n{'='*50}\\nProcessing Industry: {ind.upper()}\\n{'='*50}")
+        
         # Run the scraper
-        raw_file = await run_scraper(args)
+        current_file = await run_scraper(args)
+        
+        # Optionally enrich
+        if args.enrich:
+            current_file = await run_enrichment(current_file, args.location, args.industry)
 
         # Optionally process
         if args.process:
-            run_processing(raw_file, args.location, args.industry)
-        else:
-            logger.info("Tip: Re-run with --process to clean, deduplicate, and export the data.")
+            run_processing(current_file, args.location, args.industry)
+            
+    if not args.process and not args.enrich:
+        logger.info("Tip: Re-run with --enrich or --process to extract more data and format exports.")
 
 
 if __name__ == "__main__":

@@ -17,10 +17,10 @@ CSV_COLUMNS = [
     "business_name", "business_category", "industry", "search_category",
     "address", "street", "city", "state", "zip_code", "country",
     "latitude", "longitude",
-    "phone", "website", "email",
+    "phone", "phone_from_website", "website", "email",
     "google_rating", "review_count", "business_status", "price_level", "opening_hours",
     "facebook_url", "instagram_url", "linkedin_url", "youtube_url",
-    "has_social_presence", "booking_url",
+    "has_social_presence", "contact_page", "booking_url",
     "google_maps_url",
     "extraction_status", "data_collected_at",
 ]

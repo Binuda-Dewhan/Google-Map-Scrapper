@@ -1,81 +1,102 @@
 # US Local Business Lead Generation & Data Enrichment System
 
-A browser automation pipeline for discovering local US businesses on Google Maps, extracting publicly available contact and reputation data, and exporting clean lead datasets.
+## Overview
+A robust, automated pipeline designed to discover local US businesses on Google Maps, extract publicly available contact and reputation data, and process it into clean, high-quality lead datasets for marketing and sales outreach. 
 
-**Part 1** — Google Maps scraper (this version).
-**Part 2** — Website enrichment (planned).
+Currently, the project encompasses both **Part 1 (Google Maps Scraper)** and **Part 2 (Website Data Enrichment)**.
 
-## Project Structure
+The system architecture cleanly separates concerns into five stages:
+1. **Scraping**: Browser automation to extract unstructured data from Google Maps.
+2. **Enrichment**: Concurrent website scraping (via Playwright) to find missing emails, secondary phones, and social links.
+3. **Cleaning**: Normalizing formats (phone numbers, states, URLs).
+4. **Deduplication & Validation**: Removing duplicates via Google Place IDs and checking data integrity.
+5. **Exporting**: Generating professional, ready-to-use CSV, JSON, and Excel files.
 
-```text
-us-business-lead-generator/
-├── app/
-│   ├── core/              # Config, models, logging
-│   ├── scrapers/          # Playwright-based scraper
-│   ├── processing/        # Cleaning, deduplication, validation
-│   └── exporters/         # CSV, Excel, JSON exporters
-├── config/
-│   ├── categories.yaml    # Industry/category library with search terms
-│   └── settings.yaml      # Scraper settings (timeouts, delays, limits)
-├── data/
-│   ├── raw/               # Raw JSONL from scraper (checkpoint files)
-│   ├── cleaned/           # Cleaned JSONL
-│   └── final/             # Exported CSV/Excel/JSON
-├── logs/                  # Timestamped log files
-├── tests/
-├── main.py                # Single entry point
-├── requirements.txt
-├── .env.example
-├── .gitignore
-└── README.md
-```
+## Challenges & Solutions
 
-## Setup
+| Challenge | Solution |
+|-----------|----------|
+| **Google Anti-Bot Protections** | Implemented a "soft-click" methodology that simulates real human browsing (clicking DOM elements instead of hard-reloading URLs) alongside randomized, human-like delays. |
+| **Fragile Selectors & Changing DOMs** | Abandoned fragile CSS class names in favor of highly stable `aria-label` and `data-item-id` attributes to locate data fields. |
+| **Unreliable/Malformed Data** | Built a rigorous processing pipeline with Pydantic schemas, regex fallbacks for email/social extraction, and strict validation rules to drop malformed URLs/emails. |
+| **Mid-Scrape Crashes** | Developed a checkpointing system that continuously streams raw data to `.jsonl` files. If the script is stopped, it automatically resumes by skipping previously seen URLs. |
+| **JS-Heavy Business Websites** | Local businesses often use Wix or Squarespace. We use Playwright to fully render JavaScript and DOM elements instead of basic HTTP requests, ensuring we capture all contact data. |
+| **Slow Enrichment Times** | Website scraping can be slow. We implemented an `asyncio.Semaphore` system to aggressively process multiple websites concurrently (e.g., 5-10 tabs at once) in the background. |
 
+## Technologies Used
+- **Language**: Python 3.12+
+- **Browser Automation**: Playwright (Async)
+- **Data Validation**: Pydantic
+- **Configuration Engine**: PyYAML
+- **Data Manipulation & Export**: Pandas, OpenPyXL (for styled Excel generation)
+- **Logging**: Native Python `logging` (structured file & console logging)
+
+## Deliverables & Outputs
+
+The final output is delivered into the `data/final/` directory in three formats:
+1. **`*_leads.csv`**: A standard CSV file for importing into CRMs.
+2. **`*_leads.json`**: A raw JSON array for API integrations.
+3. **`*_leads.xlsx`**: A professionally formatted Excel spreadsheet featuring:
+   - Frozen header rows
+   - Auto-adjusted column widths
+   - Color-coded column groups (e.g., Contact Info in Green, Reputation in Gold)
+   - Built-in data filters
+
+**Data Points Extracted:**
+- Business Name, Category, Industry
+- Full Address (Parsed into Street, City, State, ZIP)
+- Coordinates (Latitude/Longitude)
+- Phone (Primary from Maps & Secondary from Website)
+- Website & Email
+- Google Rating, Review Count
+- Opening Hours, Price Level, Business Status
+- Social Media Links (Facebook, Instagram, LinkedIn, YouTube, X)
+- Booking URLs & Contact Page URLs
+
+---
+
+## Installation & Setup
+
+1. **Clone and setup the virtual environment:**
 ```bash
 python -m venv venv
 # Windows:
 .\venv\Scripts\activate
 # macOS/Linux:
 source venv/bin/activate
+```
 
+2. **Install dependencies and browser binaries:**
+```bash
 pip install -r requirements.txt
 playwright install chromium
 ```
 
+3. **Configuration:**
+- **`config/categories.yaml`**: Define the industries, categories, and Google Maps search terms.
+- **`config/settings.yaml`**: Adjust parameters like `max_results_per_search` (default 50), timeout durations, and human-like delays.
+
+---
+
 ## Usage
 
+The system is managed via a single CLI entry point: `main.py`.
+
 ```bash
-# Scrape dental clinics in Houston (headed mode, max 50 per term)
-python main.py --location "Houston, Texas" --industry health --category dental_clinic
+# Scrape EVERYTHING in the categories.yaml file and process the data
+python main.py --location "Houston, Texas" --industry all --process
 
-# Scrape all health categories in Houston
-python main.py --location "Houston, Texas" --industry health
+# Scrape multiple industries at once and run Website Enrichment to find emails
+python main.py --location "Houston, Texas" --industry health,automotive --enrich --process
 
-# Scrape + process in one step
+# Scrape a single industry (all categories inside it)
 python main.py --location "Houston, Texas" --industry health --process
 
-# Process an existing raw file only (skip scraping)
-python main.py --location "Houston, Texas" --industry health --process-only data/raw/health_houston_texas_raw.jsonl
+# Scrape a specific category and enrich website data
+python main.py --location "Houston, Texas" --industry health --category dental_clinic --enrich --process
 
-# Headless mode
-python main.py --location "Houston, Texas" --industry health --headless --process
+# Run enrichment & processing on an existing raw file (skip Maps scraping phase)
+python main.py --location "Houston, Texas" --industry health --process-only data/raw/health_houston_texas_raw.jsonl --enrich --process
 ```
 
-## Configuration
-
-- **`config/categories.yaml`** — Define industries, categories, and their Google Maps search terms.
-- **`config/settings.yaml`** — Adjust max results, timeouts, human-like delays, and retry behavior.
-
-## Data Pipeline
-
-```
-Google Maps → Raw JSONL → Clean → Deduplicate → Validate → CSV/Excel/JSON
-```
-
-## Output
-
-Final exports are saved in `data/final/` in three formats:
-- `*_leads.csv`
-- `*_leads.xlsx` (formatted with filters, frozen header, color-coded columns)
-- `*_leads.json`
+*(Note: While a `--headless` flag exists, running in the default headed mode is strongly recommended for the Maps phase to prevent Google from aggressively blocking the browser. The Website Enrichment phase runs entirely headless in the background automatically.)*

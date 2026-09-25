@@ -4,7 +4,7 @@
 
 scraper:
   # Maximum number of business results to collect per search term
-  max_results_per_search: 5
+  max_results_per_search: 50
 
   # Browser configuration
   browser:
@@ -29,6 +29,15 @@ scraper:
     max_retries: 2
     retry_delay: [3.0, 5.0]
 
+# =============================================================================
+# Website Scraper Settings
+# =============================================================================
+website_scraper:
+  concurrency_limit: 5
+  page_timeout: 15000
+  crawl_contact_page: false
+
+# =============================================================================
 # Output configuration
 output:
   raw_dir: "data/raw"

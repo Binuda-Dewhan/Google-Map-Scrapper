@@ -40,8 +40,10 @@ class BusinessLead(BaseModel):
 
     # ── Contact ─────────────────────────────────────────────────────────
     phone: Optional[str] = Field(None, description="Phone number from Maps")
+    phone_from_website: Optional[str] = Field(None, description="Secondary/direct phone found on website")
     website: Optional[str] = Field(None, description="Website URL from Maps")
-    email: Optional[str] = Field(None, description="Email if found on Maps (rare)")
+    email: Optional[str] = Field(None, description="Email if found on Maps or Website")
+    contact_page: Optional[str] = Field(None, description="Contact Us page URL found on website")
 
     # ── Reputation & Status ─────────────────────────────────────────────
     google_rating: Optional[float] = Field(None, description="Star rating (1.0–5.0)")
